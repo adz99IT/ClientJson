@@ -1,9 +1,11 @@
 import ComunicationObjects.*;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.UUID;
 
 //ClientListener si mette in attesa di connessioni.
 public class Test extends Thread {
@@ -12,14 +14,20 @@ public class Test extends Thread {
         ThreadGroup clients;
         ObjectOutputStream outStream;
         ObjectInputStream inStream;
+        Socket s = null;
 
 
         try {
-            Socket s = new Socket("poggivpn.ddns.net",8189);
+            try {
+                s = new Socket("poggivpn.ddns.net", 8189);
+            }catch(ConnectException e){
+                System.out.println("Server offline");
+                return;
+            }
             outStream = new ObjectOutputStream(s.getOutputStream());
             inStream = new ObjectInputStream(s.getInputStream());
 
-            switch(2){
+            switch(3){
                 case 1:
                     System.out.println("Scrivo");
                     outStream.writeObject(new Login("michelefiorelli@progtre.it", "c1be5c740e77452a4970bd2ab3cf78ea09158e5266e8fc5be005a274ce86003a"));
@@ -39,7 +47,43 @@ public class Test extends Thread {
                     a.add("alessandrodizitti@progtre.it");
                     a.add("michelefiorelli@progtre.it");
                     outStream.writeObject((new RequestSendEmail(new Login("michelefiorelli@progtre.it", "c1be5c740e77452a4970bd2ab3cf78ea09158e5266e8fc5be005a274ce86003a"), a,"Ciao!", "Come va? Test Prog3")));
-                    System.out.println( " "+((ReplySendEmail)inStream.readObject()).getExitCode() ) ;
+                    ReplySendEmail r = (ReplySendEmail)inStream.readObject();
+                    if( r.getExitCode() == 1 )
+                        System.out.println("Mail inviata a tutti");
+                    else if(r.getExitCode() == -1)
+                        System.out.println("login fallito");
+                    else if(r.getExitCode() == -2) {
+                        System.out.println("Invio fallito per i seguenti indirizzi:");
+                        if(r.getNotDelivered() != null)
+                        for (String st : r.getNotDelivered()){
+                            System.out.println(st+" - ");
+                        }
+                    }
+                    else if(r.getExitCode() == -3) {
+                        System.out.println("Invio fallito per tutti gli indirizzi.");
+                    }
+                    break;
+
+                case 3:
+                    ArrayList<UUID> b = new ArrayList<>();
+                    b.add(UUID.fromString("a8bb59ee-e9bf-4c21-89f9-2566fcbde1f2"));
+                    b.add(UUID.fromString("ce3f88f7-555b-4c97-991d-faa0b6a553bf"));
+                    outStream.writeObject(new RequestEmailCancellation("alessandrodizitti@progtre.it", "3f557ea4f0c3fec215ff5cf0727884113757c477f1a3d7f60d7fa623df00ccf0", b));
+                    ReplyEmailCancellation rr = (ReplyEmailCancellation)inStream.readObject();
+                    if( rr.getExitCode() == 1 )
+                        System.out.println("Tutte le mail eliminate");
+                    else if(rr.getExitCode() == -1)
+                        System.out.println("login fallito");
+                    else if(rr.getExitCode() == -2) {
+                        System.out.println("Solo le seguenti mail eliminate:");
+                        if(rr.getDeleted() != null)
+                            for (UUID id : rr.getDeleted()){
+                                System.out.println(id+" - ");
+                            }
+                    }
+                    else if(rr.getExitCode() == -3) {
+                        System.out.println("Nessuna email eliminata.");
+                    }
                     break;
             }
             s.close();
