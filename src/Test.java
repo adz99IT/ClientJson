@@ -27,7 +27,7 @@ public class Test extends Thread {
             outStream = new ObjectOutputStream(s.getOutputStream());
             inStream = new ObjectInputStream(s.getInputStream());
 
-            switch(3){
+            switch(4){
                 case 1:
                     System.out.println("Scrivo");
                     outStream.writeObject(new Login("michelefiorelli@progtre.it", "c1be5c740e77452a4970bd2ab3cf78ea09158e5266e8fc5be005a274ce86003a"));
@@ -66,8 +66,8 @@ public class Test extends Thread {
 
                 case 3:
                     ArrayList<UUID> b = new ArrayList<>();
-                    b.add(UUID.fromString("a8bb59ee-e9bf-4c21-89f9-2566fcbde1f2"));
                     b.add(UUID.fromString("ce3f88f7-555b-4c97-991d-faa0b6a553bf"));
+                    b.add(UUID.fromString("3aff8f2c-4068-4a0e-b472-54f50079c742"));
                     outStream.writeObject(new RequestEmailCancellation("alessandrodizitti@progtre.it", "3f557ea4f0c3fec215ff5cf0727884113757c477f1a3d7f60d7fa623df00ccf0", b));
                     ReplyEmailCancellation rr = (ReplyEmailCancellation)inStream.readObject();
                     if( rr.getExitCode() == 1 )
@@ -84,6 +84,26 @@ public class Test extends Thread {
                     else if(rr.getExitCode() == -3) {
                         System.out.println("Nessuna email eliminata.");
                     }
+                    break;
+
+                case 4:
+                    outStream.writeObject(new RequestDownloadEmail("alessandrodizitti@progtre.it","3f557ea4f0c3fec215ff5cf0727884113757c477f1a3d7f60d7fa623df00ccf0", null));
+                    ReplyDownloadEmail z = (ReplyDownloadEmail)inStream.readObject();
+                    if(z.getExitCode() == 1){
+                        if(z.getEmails() == null || z.getEmails().size() < 1)
+                            System.out.println("Nessuna nuova email disponibile");
+                        else{
+                            for (Email e : z.getEmails()){
+                                System.out.println("\n----------------");
+                                System.out.println("Da: "+e.getFrom());
+                                System.out.println("Subject: "+e.getSubject());
+                                System.out.println("TEXT:\n "+e.getText());
+                            }
+                        }
+                    }else if(z.getExitCode() == -1)
+                        System.out.println("login fallito");
+                    else // -3
+                        System.out.println("Errore");
                     break;
             }
             s.close();
