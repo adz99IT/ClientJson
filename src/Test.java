@@ -45,8 +45,7 @@ public class Test extends Thread {
                 case 2:
                     ArrayList<String> a = new ArrayList<>();
                     a.add("alessandrodizitti@progtre.it");
-                    a.add("michelefiorelli@progtre.it");
-                    outStream.writeObject((new RequestSendEmail(new Login("michelefiorelli@progtre.it", "c1be5c740e77452a4970bd2ab3cf78ea09158e5266e8fc5be005a274ce86003a"), a,"Ciao!", "Come va? Test Prog3")));
+                    outStream.writeObject((new RequestSendEmail(new Login("michelefiorelli@progtre.it", "c1be5c740e77452a4970bd2ab3cf78ea09158e5266e8fc5be005a274ce86003a"), a,"News", "Iscriviti per l migliori news")));
                     ReplySendEmail r = (ReplySendEmail)inStream.readObject();
                     if( r.getExitCode() == 1 )
                         System.out.println("Mail inviata a tutti");
@@ -87,7 +86,9 @@ public class Test extends Thread {
                     break;
 
                 case 4:
-                    outStream.writeObject(new RequestDownloadEmail("alessandrodizitti@progtre.it","3f557ea4f0c3fec215ff5cf0727884113757c477f1a3d7f60d7fa623df00ccf0", null));
+                    Long l = 1607888580000L;
+                    Date d = new Date(l);
+                    outStream.writeObject(new RequestDownloadEmail("alessandrodizitti@progtre.it","3f557ea4f0c3fec215ff5cf0727884113757c477f1a3d7f60d7fa623df00ccf0", d));
                     ReplyDownloadEmail z = (ReplyDownloadEmail)inStream.readObject();
                     if(z.getExitCode() == 1){
                         if(z.getEmails() == null || z.getEmails().size() < 1)
@@ -95,6 +96,7 @@ public class Test extends Thread {
                         else{
                             for (Email e : z.getEmails()){
                                 System.out.println("\n----------------");
+                                System.out.println("Data: "+e.getDate());
                                 System.out.println("Da: "+e.getFrom());
                                 System.out.println("Subject: "+e.getSubject());
                                 System.out.println("TEXT:\n "+e.getText());
